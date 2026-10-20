@@ -77,6 +77,7 @@ func (azureClient *ArmClient) ListSubscriptions(ctx context.Context) (map[string
 			continue
 		}
 
+	subscriptionLoop:
 		for _, subscription := range result.Value {
 			useSubscription := false
 
@@ -86,17 +87,23 @@ func (azureClient *ArmClient) ListSubscriptions(ctx context.Context) (map[string
 			}
 
 			// use subscription filter
-			if len(azureClient.serviceDiscovery.subscriptionIds) > 0 {
+			if len(azureClient.serviceDiscovery.include.subscriptionIds) > 0 {
 				useSubscription = false
-				for _, subscriptionId := range azureClient.serviceDiscovery.subscriptionIds {
+				for _, subscriptionId := range azureClient.serviceDiscovery.include.subscriptionIds {
 					if strings.EqualFold(*subscription.SubscriptionID, subscriptionId) {
 						useSubscription = true
 						break
 					}
 				}
 
-				// filter by tag selector (using kubernetes label selector)
+				for _, subscriptionId := range azureClient.serviceDiscovery.exclude.subscriptionIds {
+					if strings.EqualFold(*subscription.SubscriptionID, subscriptionId) {
+						continue subscriptionLoop
+					}
+				}
+
 			} else if azureClient.serviceDiscovery.subscriptionTagSelector != nil {
+				// filter by tag selector (using kubernetes label selector)
 				tags := labels.Set(to.StringMap(subscription.Tags))
 				useSubscription = (*azureClient.serviceDiscovery.subscriptionTagSelector).Matches(tags)
 			} else {

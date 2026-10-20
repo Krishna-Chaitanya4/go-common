@@ -10,6 +10,8 @@
 | `AZURE_SERVICEDISCOVERY_CACHE_TTL`                 | `60m` (time.Duration) | ServiceDiscovery cache (eg. subscription, resourceGroup list,...)                                                                                                                                                                     |
 | `AZURE_SERVICEDISCOVERY_SUBSCRIPTION_ID`           |                       | Subscription IDs separated by commas or spaces (whitespaces are trimmed)                                                                                                                                                              |
 | `AZURE_SERVICEDISCOVERY_SUBSCRIPTION_TAG_SELECTOR` |                       | Tag selector `tagName=tagValue,tagName2=tagValue2` to filter subscriptions for ServiceDiscovery (uses [kubernetes label selector library](https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/#label-selectors)) |
+| `AZURE_SERVICEDISCOVERY_SUBSCRIPTION_INCLUDE`      |                       | List of subscription IDs to include, separated by spaces, commas or semicolons                                                                                                                                                        |
+| `AZURE_SERVICEDISCOVERY_SUBSCRIPTION_EXCLUDE`      |                       | List of subscription IDs to exclude, separated by spaces, commas or semicolons                                                                                                                                                        |
 
 ### Authentication
 

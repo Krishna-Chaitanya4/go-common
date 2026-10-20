@@ -24,6 +24,8 @@ import (
 const (
 	EnvVarServiceDiscoveryTtl                     = "AZURE_SERVICEDISCOVERY_CACHE_TTL"
 	EnvVarServiceDiscoverySubscriptionId          = "AZURE_SERVICEDISCOVERY_SUBSCRIPTION_ID"
+	EnvVarServiceDiscoverySubscriptionInclude     = "AZURE_SERVICEDISCOVERY_SUBSCRIPTION_INCLUDE"
+	EnvVarServiceDiscoveryubscriptionExclude      = "AZURE_SERVICEDISCOVERY_SUBSCRIPTION_EXCLUDE"
 	EnvVarServiceDiscoverySubscriptionTagSelector = "AZURE_SERVICEDISCOVERY_SUBSCRIPTION_TAG_SELECTOR"
 )
 
@@ -39,7 +41,14 @@ type (
 		cacheTtl time.Duration
 
 		serviceDiscovery struct {
-			subscriptionIds         []string
+			include struct {
+				subscriptionIds []string
+			}
+
+			exclude struct {
+				subscriptionIds []string
+			}
+
 			subscriptionTagSelector *labels.Selector
 		}
 
@@ -113,21 +122,35 @@ func (azureClient *ArmClient) initCache() {
 
 // init serviceDiscovery settings
 func (azureClient *ArmClient) initServiceDiscovery() {
-	// use fixed list of subscription ids
-	if val := os.Getenv(EnvVarServiceDiscoverySubscriptionId); val != "" {
-		azureClient.serviceDiscovery.subscriptionIds = []string{}
-		// replace spaces with commas,
+	azureClient.serviceDiscovery.include.subscriptionIds = []string{}
+	azureClient.serviceDiscovery.exclude.subscriptionIds = []string{}
+
+	addStringListToList := func(list *[]string, val string) {
+		// replace spaces and semicolons with commas,
 		// we should be able to use both for easier usage in yaml files
 		val = strings.ReplaceAll(val, " ", ",")
-		for _, subscriptionId := range strings.Split(val, ",") {
-			subscriptionId = strings.TrimSpace(subscriptionId)
-			if subscriptionId != "" {
-				azureClient.serviceDiscovery.subscriptionIds = append(
-					azureClient.serviceDiscovery.subscriptionIds,
-					subscriptionId,
-				)
+		val = strings.ReplaceAll(val, ";", ",")
+		for _, row := range strings.Split(val, ",") {
+			row = strings.TrimSpace(row)
+			if row != "" {
+				*list = append(*list, row)
 			}
 		}
+
+		return
+	}
+
+	// use fixed list of subscription ids
+	if val := os.Getenv(EnvVarServiceDiscoverySubscriptionId); val != "" {
+		addStringListToList(&azureClient.serviceDiscovery.include.subscriptionIds, val)
+	}
+
+	if val := os.Getenv(EnvVarServiceDiscoverySubscriptionInclude); val != "" {
+		addStringListToList(&azureClient.serviceDiscovery.include.subscriptionIds, val)
+	}
+
+	if val := os.Getenv(EnvVarServiceDiscoveryubscriptionExclude); val != "" {
+		addStringListToList(&azureClient.serviceDiscovery.exclude.subscriptionIds, val)
 	}
 
 	// parse subscription tag selector (using kubernetes label selector)
@@ -287,13 +310,26 @@ func (azureClient *ArmClient) SetSubscriptionFilter(subscriptionId ...string) {
 
 // SetSubscriptionID set subscription filter, other subscriptions will be ignored
 func (azureClient *ArmClient) SetSubscriptionID(subscriptionId ...string) {
-	azureClient.serviceDiscovery.subscriptionIds = subscriptionId
+	azureClient.serviceDiscovery.include.subscriptionIds = subscriptionId
 }
 
 // AddSubscriptionID add subscription filter, other subscriptions will be ignored
 func (azureClient *ArmClient) AddSubscriptionID(subscriptionId ...string) {
-	azureClient.serviceDiscovery.subscriptionIds = append(
-		azureClient.serviceDiscovery.subscriptionIds,
+	azureClient.IncludeSubscriptionID(subscriptionId...)
+}
+
+// IncludeSubscriptionID includes subscription in serviceDiscovery, other subscriptions will be ignored
+func (azureClient *ArmClient) IncludeSubscriptionID(subscriptionId ...string) {
+	azureClient.serviceDiscovery.include.subscriptionIds = append(
+		azureClient.serviceDiscovery.include.subscriptionIds,
+		subscriptionId...,
+	)
+}
+
+// ExcludeSubscriptionID excludes subscription from serviceDiscovery, other subscriptions will be ignored
+func (azureClient *ArmClient) ExcludeSubscriptionID(subscriptionId ...string) {
+	azureClient.serviceDiscovery.exclude.subscriptionIds = append(
+		azureClient.serviceDiscovery.exclude.subscriptionIds,
 		subscriptionId...,
 	)
 }
