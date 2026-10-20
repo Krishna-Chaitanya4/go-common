@@ -123,7 +123,7 @@ func getAzureCloudConfig() (cloud.Configuration, error) {
 		cloudConfigJson = []byte(val)
 	} else if val := os.Getenv("AZURE_CLOUD_CONFIG_FILE"); len(val) > 0 {
 		// cloud config via JSON file
-		data, err := os.ReadFile(val) // #nosec G304
+		data, err := os.ReadFile(val) // nolint:gosec
 		if err != nil {
 			return cloudConfig, fmt.Errorf(`unable to parse json for AzureSecretCloud/AzurePrivateCloud from env var AZURE_CLOUD_CONFIG_FILE, see https://github.com/webdevops/go-common/tree/main/azuresdk: %w`, err)
 		}

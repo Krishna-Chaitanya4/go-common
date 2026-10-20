@@ -135,7 +135,7 @@ func newLoggerHandler(w io.Writer, handlerOpts *Options, opts ...LoggerOptionFun
 				tintOpts.TimeFormat = ""
 			}
 
-			handler = tint.NewHandler(w, &tintOpts)
+			handler = tint.NewTextHandler(w, &tintOpts)
 		} else {
 			handler = slog.NewTextHandler(w, handlerOpts.HandlerOptions)
 		}

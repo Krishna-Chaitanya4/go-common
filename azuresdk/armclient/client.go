@@ -136,8 +136,6 @@ func (azureClient *ArmClient) initServiceDiscovery() {
 				*list = append(*list, row)
 			}
 		}
-
-		return
 	}
 
 	// use fixed list of subscription ids
