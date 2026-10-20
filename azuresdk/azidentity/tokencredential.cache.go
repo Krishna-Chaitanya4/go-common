@@ -15,8 +15,8 @@ import (
 
 const (
 	AzTokenCredentialCachedExpiryTimeNegativeOffset = 5 * time.Minute
-	AzTokenCredentialCachedExpiryTimeDefault = 10 * time.Minute
-	AzTokenCredentialCachedCleanupInterval = 1 * time.Minute
+	AzTokenCredentialCachedExpiryTimeDefault        = 10 * time.Minute
+	AzTokenCredentialCachedCleanupInterval          = 1 * time.Minute
 )
 
 type (
@@ -55,8 +55,8 @@ func NewAzCachedCredential(cred azcore.TokenCredential) (azcore.TokenCredential,
 func (c AzCachedCredential) GetToken(ctx context.Context, opts policy.TokenRequestOptions) (azcore.AccessToken, error) {
 	// fix double slash //.default to improve caching
 	for i, v := range opts.Scopes {
-		if strings.HasSuffix(v, "//.default") {
-			opts.Scopes[i] = strings.TrimSuffix(v, "//.default") + "/.default"
+		if before, ok := strings.CutSuffix(v, "//.default"); ok {
+			opts.Scopes[i] = before + "/.default"
 		}
 	}
 
