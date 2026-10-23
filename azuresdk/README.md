@@ -22,6 +22,12 @@ role-assignment propagation) without querying ARM on every discovery call.
 Non-empty subscription results retain the configured cache TTL. Discovery errors
 are returned to the caller and are not cached.
 
+Subscription iterators retain configured subscription IDs as a filter, not a
+snapshot of discovery results. Each iteration uses the service-discovery cache,
+so newly visible subscriptions can be discovered after cache expiration while
+the configured filter remains in effect. Setting the filter still performs eager
+discovery and retains the existing panic-on-error behavior.
+
 ### Authentication
 
 Hint: please also check [microsoft azure-sdk documentation](https://docs.microsoft.com/en-us/azure/developer/go/azure-sdk-authentication) for advanced usage.
